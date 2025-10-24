@@ -1,17 +1,60 @@
 import { addressDummyData } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
+import axios from "axios";
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
 
 const OrderSummary = () => {
 
-  const { currency, router, getCartCount, getCartAmount } = useAppContext()
+  const { currency, router, getCartCount, getCartAmount, userData, cartItems, setCartItems } = useAppContext()
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const [userAddresses, setUserAddresses] = useState([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+
+  const { data: session } = useSession();
 
   const fetchUserAddresses = async () => {
-    setUserAddresses(addressDummyData);
+    try {
+      setLoadingAddresses(true);
+      // Prefer NextAuth session email; fall back to context userId
+      const email = session?.user?.email;
+      const userIdFromContext = userData?._id || userData?.id || userData?.userId;
+      const query = email
+        ? `?email=${encodeURIComponent(email)}`
+        : userIdFromContext
+        ? `?userId=${encodeURIComponent(userIdFromContext)}`
+        : "";
+
+      if (!query) {
+        toast.error("Login to load your saved addresses");
+        setUserAddresses([]);
+        setSelectedAddress(null);
+        return;
+      }
+
+      const { data } = await axios.get(`/api/user/get-address${query}`);
+      if (data && data.success) {
+        const addresses = data.addresses ?? data.address ?? data.data ?? [];
+        const addressesArray = Array.isArray(addresses) ? addresses : [];
+        setUserAddresses(addressesArray);
+        if (addressesArray.length > 0) {
+          setSelectedAddress(addressesArray[0]);
+        } else {
+          setSelectedAddress(null);
+        }
+      } else {
+        toast.error(data?.message || "Failed to fetch addresses");
+      }
+    } catch (error) {
+      console.error('fetchUserAddresses error', error);
+      toast.error(error?.response?.data?.message || error.message || 'Error fetching addresses');
+    } finally {
+      setLoadingAddresses(false);
+      
+    }
   }
 
   const handleAddressSelect = (address) => {
@@ -20,12 +63,18 @@ const OrderSummary = () => {
   };
 
   const createOrder = async () => {
+    if (!selectedAddress) {
+      toast.error('Please select an address before placing order');
+      return;
+    }
 
+    // TODO: implement order creation (call backend endpoint)
+    toast.success('Order flow not implemented yet');
   }
 
   useEffect(() => {
     fetchUserAddresses();
-  }, [])
+  }, [session?.user?.email, userData])
 
   return (
     <div className="w-full md:w-96 bg-gray-500/5 p-5">
