@@ -3,7 +3,6 @@ import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useSession } from "next-auth/react";
 
 const OrderSummary = () => {
 
@@ -14,36 +13,20 @@ const OrderSummary = () => {
   const [userAddresses, setUserAddresses] = useState([]);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
-  const { data: session } = useSession();
-
   const fetchUserAddresses = async () => {
     try {
-      setLoadingAddresses(true);
-      // Prefer NextAuth session email; fall back to context userId
-      const email = session?.user?.email;
-      const userIdFromContext = userData?._id || userData?.id || userData?.userId;
-      const query = email
-        ? `?email=${encodeURIComponent(email)}`
-        : userIdFromContext
-        ? `?userId=${encodeURIComponent(userIdFromContext)}`
-        : "";
-
-      if (!query) {
-        toast.error("Login to load your saved addresses");
-        setUserAddresses([]);
-        setSelectedAddress(null);
-        return;
-      }
-
-      const { data } = await axios.get(`/api/user/get-address${query}`);
+  setLoadingAddresses(true);
+  // Pass userId from context so server returns only the user's addresses
+  const userId = userData?._id || userData?.id || userData?.userId;
+  const { data } = await axios.get(`/api/user/get-address${userId ? `?userId=${encodeURIComponent(userId)}` : ''}`);
       if (data && data.success) {
+        // support multiple possible payload names from API: addresses | address | data
         const addresses = data.addresses ?? data.address ?? data.data ?? [];
+        // ensure it's an array
         const addressesArray = Array.isArray(addresses) ? addresses : [];
         setUserAddresses(addressesArray);
         if (addressesArray.length > 0) {
           setSelectedAddress(addressesArray[0]);
-        } else {
-          setSelectedAddress(null);
         }
       } else {
         toast.error(data?.message || "Failed to fetch addresses");
@@ -73,8 +56,10 @@ const OrderSummary = () => {
   }
 
   useEffect(() => {
-    fetchUserAddresses();
-  }, [session?.user?.email, userData])
+    if (userData) {
+      fetchUserAddresses();
+    }
+  }, [userData])
 
   return (
     <div className="w-full md:w-96 bg-gray-500/5 p-5">
