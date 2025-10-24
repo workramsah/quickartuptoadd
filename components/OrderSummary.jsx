@@ -1,11 +1,12 @@
 import { addressDummyData } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
+import { useSession } from "next-auth/react";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const OrderSummary = () => {
-
+  const { data: session } = useSession();
   const { currency, router, getCartCount, getCartAmount, userData, cartItems, setCartItems } = useAppContext()
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -15,20 +16,36 @@ const OrderSummary = () => {
 
   const fetchUserAddresses = async () => {
     try {
-  setLoadingAddresses(true);
-  // Pass userId from context so server returns only the user's addresses
-  const userId = userData?._id || userData?.id || userData?.userId;
-  const { data } = await axios.get(`/api/user/get-address${userId ? `?userId=${encodeURIComponent(userId)}` : ''}`);
+      setLoadingAddresses(true);
+      
+      // Use session email first, fallback to userData
+      const userEmail = session?.user?.email;
+      const userId = userData?._id || userData?.id || userData?.userId;
+      
+      // Construct query parameter - prefer email over userId
+      let queryParam = '';
+      if (userEmail) {
+        queryParam = `?email=${encodeURIComponent(userEmail)}`;
+      } else if (userId) {
+        queryParam = `?userId=${encodeURIComponent(userId)}`;
+      }
+      
+      console.log('Fetching addresses with:', { userEmail, userId, queryParam });
+      
+      const { data } = await axios.get(`/api/user/get-address${queryParam}`);
+      
       if (data && data.success) {
         // support multiple possible payload names from API: addresses | address | data
         const addresses = data.addresses ?? data.address ?? data.data ?? [];
         // ensure it's an array
         const addressesArray = Array.isArray(addresses) ? addresses : [];
+        console.log('Fetched addresses:', addressesArray);
         setUserAddresses(addressesArray);
         if (addressesArray.length > 0) {
           setSelectedAddress(addressesArray[0]);
         }
       } else {
+        console.log('API response not successful:', data);
         toast.error(data?.message || "Failed to fetch addresses");
       }
     } catch (error) {
@@ -36,7 +53,6 @@ const OrderSummary = () => {
       toast.error(error?.response?.data?.message || error.message || 'Error fetching addresses');
     } finally {
       setLoadingAddresses(false);
-      
     }
   }
 
@@ -56,10 +72,11 @@ const OrderSummary = () => {
   }
 
   useEffect(() => {
-    if (userData) {
+    // Fetch addresses when session email is available or userData is available
+    if (session?.user?.email || userData) {
       fetchUserAddresses();
     }
-  }, [userData])
+  }, [session?.user?.email, userData])
 
   return (
     <div className="w-full md:w-96 bg-gray-500/5 p-5">
