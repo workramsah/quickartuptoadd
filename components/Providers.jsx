@@ -4,7 +4,7 @@ import { AppContextProvider } from '@/context/AppContext'
 
 export default function Providers({ children }) {
   return (
-    <SessionProvider>
+    <SessionProvider refetchOnWindowFocus={false}>
       <AppContextProvider>
         {children}
       </AppContextProvider>

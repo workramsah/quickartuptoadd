@@ -6,6 +6,8 @@ import { useAppContext } from "@/context/AppContext";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import Loading from "@/components/Loading";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const MyOrders = () => {
 
@@ -15,8 +17,19 @@ const MyOrders = () => {
     const [loading, setLoading] = useState(true);
 
     const fetchOrders = async () => {
-        setOrders(orderDummyData)
-        setLoading(false);
+        try {
+            const {data} = await axios.get('/api/order/list')
+            if(data.success){
+                setOrders(data.orders)
+                setLoading(false)
+            } else{
+                toast.error(data.message)
+                setLoading(false)
+            }
+        } catch (error) {
+            toast.error(error.message)
+            setLoading(false)
+        }
     }
 
     useEffect(() => {

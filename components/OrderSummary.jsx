@@ -62,13 +62,34 @@ const OrderSummary = () => {
   };
 
   const createOrder = async () => {
-    if (!selectedAddress) {
-      toast.error('Please select an address before placing order');
-      return;
-    }
+    try {
+      if(!selectedAddress){
+        return toast.error("please select an address")
+      }
+      let cartItemsArray = Object.keys(cartItems).map((key) => ({
+        productId: key,
+        quantity: cartItems[key],
+      }));
+      cartItemsArray = cartItemsArray.filter((item) => item.quantity > 0);
+      if(cartItemsArray.length === 0){
+        return toast.error("please add items to cart")
+      }
 
-    // TODO: implement order creation (call backend endpoint)
-    toast.success('Order flow not implemented yet');
+      const {data} = await axios.post("/api/order/create",{
+        address:selectedAddress,
+        items:cartItemsArray
+      })
+      if(data.success){
+        toast.success(data.message)
+        setCartItems({})
+        router.push("/order-placed")
+      }
+      else{
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message || 'Error creating order');
+    }
   }
 
   useEffect(() => {
