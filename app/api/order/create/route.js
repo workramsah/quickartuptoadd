@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/prisma/client";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 
 export async function POST(request) {
     try {
@@ -65,7 +65,7 @@ export async function POST(request) {
         const order = await prisma.order.create({
             data: {
                 userId: user.id,
-                addressId: address.id || null, // Use address ID if available
+                addressId: address.id, // Address ID is required by schema
                 amount: finalAmount,
                 status: "Order Placed",
                 items: {
