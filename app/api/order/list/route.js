@@ -8,20 +8,28 @@ import { prisma } from '@/prisma/client';
 export async function GET(request) {
     try {
         const session = await getServerSession(authOptions);
-        
-        if (!session || !session.user) {
-            return NextResponse.json({ success: false, message: 'Authentication required' }, { status: 401 });
+
+        // Parse URL robustly to allow fallback params in non-session contexts
+        const url = new URL(request.url, process.env.NEXTAUTH_URL || 'http://localhost:3000');
+        const emailParam = url.searchParams.get('email');
+        const userIdParam = url.searchParams.get('userId');
+
+        // Resolve user: prefer session; fallback to email or userId param
+        let user = null;
+        if (session?.user?.email) {
+            user = await prisma.user.findUnique({ where: { email: session.user.email } });
         }
-        
-        // Find user by email
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email }
-        });
-        
+        if (!user && emailParam) {
+            user = await prisma.user.findUnique({ where: { email: emailParam } });
+        }
+        if (!user && userIdParam) {
+            user = await prisma.user.findUnique({ where: { id: userIdParam } });
+        }
+
         if (!user) {
-            return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+            return NextResponse.json({ success: false, message: 'User not found or unauthenticated' }, { status: 404 });
         }
-        
+
         // Get orders with related data
         const orders = await prisma.order.findMany({
             where: { userId: user.id },
@@ -37,7 +45,7 @@ export async function GET(request) {
                 date: 'desc'
             }
         });
-        
+
         // Format orders to match frontend expectations
         const formattedOrders = orders.map(order => ({
             id: order.id,
@@ -49,7 +57,7 @@ export async function GET(request) {
                 product: item.product || {}
             }))
         }));
-        
+
         return NextResponse.json({ success: true, orders: formattedOrders });
     } catch (error) {
         console.error('Error fetching orders:', error);
