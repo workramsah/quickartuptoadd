@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request) {
   try {
-    const url = new URL(request.url);
+    const url = new URL(request.url, process.env.NEXTAUTH_URL || "http://localhost:3000");
     const userId = url.searchParams.get("userId");
     const email = url.searchParams.get("email");
 

@@ -1,11 +1,25 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { assets } from '@/assets/assets'
 import Image from 'next/image';
 import { useAppContext } from '@/context/AppContext';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const ProductCard = ({ product }) => {
 
-    const { currency, router } = useAppContext()
+    const { currency, router, addToCart } = useAppContext()
+    const [buying, setBuying] = useState(false)
+
+    const handleBuyNow = async (e) => {
+        e.stopPropagation()
+        if (buying) return
+        try {
+            setBuying(true)
+            await addToCart(product.id)
+            router.push('/cart')
+        } catch (err) {
+            setBuying(false)
+        }
+    }
 
     return (
         <div
@@ -51,8 +65,19 @@ const ProductCard = ({ product }) => {
 
             <div className="flex items-end justify-between w-full mt-1">
                 <p className="text-base font-medium">{currency}{product.offerPrice}</p>
-                <button className=" max-sm:hidden px-4 py-1.5 text-gray-500 border border-gray-500/20 rounded-full text-xs hover:bg-slate-50 transition">
-                    Buy now
+                <button
+                    onClick={handleBuyNow}
+                    disabled={buying}
+                    className="max-sm:hidden px-4 py-1.5 text-gray-500 border border-gray-500/20 rounded-full text-xs hover:bg-slate-50 transition flex items-center gap-2"
+                >
+                    {buying ? (
+                        <>
+                            <LoadingSpinner size="sm" color="gray" />
+                            <span>Buying...</span>
+                        </>
+                    ) : (
+                        <span>Buy now</span>
+                    )}
                 </button>
             </div>
         </div>

@@ -34,7 +34,17 @@ export const AppContextProvider = (props) => {
         try {
             const {data} = await axios.get('/api/product/list')
             if(data.success){
-                setProducts(data.products)
+                // Ensure product.image is an array (backend stores as JSON string)
+                const normalized = (data.products || []).map(p => {
+                    let images = []
+                    if (Array.isArray(p.image)) {
+                        images = p.image
+                    } else if (typeof p.image === 'string') {
+                        try { images = JSON.parse(p.image) } catch { images = [] }
+                    }
+                    return { ...p, image: images }
+                })
+                setProducts(normalized)
             }else{
                 toast.error(data.message)
             }

@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request) {
     try {
-        const { searchParams } = new URL(request.url);
+        const { searchParams } = new URL(request.url, process.env.NEXTAUTH_URL || "http://localhost:3000");
         const userId = searchParams.get('userId');
         
         if (!userId) {

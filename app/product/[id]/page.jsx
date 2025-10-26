@@ -9,6 +9,7 @@ import { useParams } from "next/navigation";
 import Loading from "@/components/Loading";
 import { useAppContext } from "@/context/AppContext";
 import React from "react";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Product = () => {
 
@@ -18,6 +19,8 @@ const Product = () => {
 
     const [mainImage, setMainImage] = useState(null);
     const [productData, setProductData] = useState(null);
+    const [adding, setAdding] = useState(false);
+    const [buying, setBuying] = useState(false);
 
     const fetchProductData = async () => {
         const product = products.find(product => product.id === id);
@@ -113,11 +116,19 @@ const Product = () => {
                     </div>
 
                     <div className="flex items-center mt-10 gap-4">
-                        <button onClick={() => addToCart(productData.id)} className="w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition">
-                            Add to Cart
+                        <button
+                            onClick={async () => { if (adding || buying) return; try { setAdding(true); await addToCart(productData.id); } finally { setAdding(false); } }}
+                            disabled={adding || buying}
+                            className="w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition flex items-center justify-center gap-2"
+                        >
+                            {adding ? (<><LoadingSpinner size="sm" color="gray" /><span>Adding...</span></>) : (<>Add to Cart</>)}
                         </button>
-                        <button onClick={() => { addToCart(productData.id); router.push('/cart') }} className="w-full py-3.5 bg-orange-500 text-white hover:bg-orange-600 transition">
-                            Buy now
+                        <button
+                            onClick={async () => { if (buying) return; try { setBuying(true); await addToCart(productData.id); router.push('/cart') } finally { setBuying(false) } }}
+                            disabled={buying}
+                            className="w-full py-3.5 bg-orange-500 text-white hover:bg-orange-600 transition flex items-center justify-center gap-2"
+                        >
+                            {buying ? (<><LoadingSpinner size="sm" color="white" /><span>Buying...</span></>) : (<>Buy now</>)}
                         </button>
                     </div>
                 </div>

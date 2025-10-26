@@ -19,7 +19,20 @@ const ProductList = () => {
     try {
       const {data} = await axios.get('/api/product/seller-list')
       if(data.success){
-        setProducts(data.products)
+        // Normalize product.image to array for Next/Image
+        const normalized = (data.products || []).map(p => {
+          let images = []
+          if (Array.isArray(p.image)) {
+            images = p.image
+          } else if (typeof p.image === 'string') {
+            try { images = JSON.parse(p.image) } catch { images = [] }
+          } else if (p.image && typeof p.image === 'object') {
+            // In case p.image is JSON object, flatten potential array-like
+            images = Array.isArray(p.image) ? p.image : []
+          }
+          return { ...p, image: images }
+        })
+        setProducts(normalized)
         setLoading(false)
       } else{
         toast.error(data.message)
@@ -71,7 +84,7 @@ const ProductList = () => {
                   <td className="px-4 py-3 max-sm:hidden">{product.category}</td>
                   <td className="px-4 py-3">${product.offerPrice}</td>
                   <td className="px-4 py-3 max-sm:hidden">
-                    <button onClick={() => router.push(`/product/${product._id}`)} className="flex items-center gap-1 px-1.5 md:px-3.5 py-2 bg-orange-600 text-white rounded-md">
+                    <button onClick={() => router.push(`/product/${product.id}`)} className="flex items-center gap-1 px-1.5 md:px-3.5 py-2 bg-orange-600 text-white rounded-md">
                       <span className="hidden md:block">Visit</span>
                       <Image
                         className="h-3.5"
