@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from "react";
-import { assets, orderDummyData } from "@/assets/assets";
+import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
 import Footer from "@/components/seller/Footer";
@@ -14,8 +14,20 @@ const Orders = () => {
     const [loading, setLoading] = useState(true);
 
     const fetchSellerOrders = async () => {
-        setOrders(orderDummyData);
-        setLoading(false);
+        try {
+            setLoading(true);
+            const res = await fetch('/api/order/seller-orders');
+            const data = await res.json();
+            if (data.success) {
+                setOrders(data.orders || []);
+            } else {
+                console.error('Failed to fetch seller orders:', data.message);
+            }
+        } catch (err) {
+            console.error('Error fetching seller orders:', err);
+        } finally {
+            setLoading(false);
+        }
     }
 
     useEffect(() => {
@@ -44,13 +56,13 @@ const Orders = () => {
                             </div>
                             <div>
                                 <p>
-                                    <span className="font-medium">{order.address.fullName}</span>
+                                    <span className="font-medium">{order.address?.fullName}</span>
                                     <br />
-                                    <span >{order.address.area}</span>
+                                    <span >{order.address?.area}</span>
                                     <br />
-                                    <span>{`${order.address.city}, ${order.address.state}`}</span>
+                                    <span>{`${order.address?.city || ''}, ${order.address?.state || ''}`}</span>
                                     <br />
-                                    <span>{order.address.phoneNumber}</span>
+                                    <span>{order.address?.phoneNumber}</span>
                                 </p>
                             </div>
                             <p className="font-medium my-auto">{currency}{order.amount}</p>
