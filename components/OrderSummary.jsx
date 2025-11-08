@@ -13,6 +13,7 @@ const OrderSummary = () => {
 
   const [userAddresses, setUserAddresses] = useState([]);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [creatingOrder, setCreatingOrder] = useState(false);
 
   const fetchUserAddresses = async () => {
     try {
@@ -62,33 +63,59 @@ const OrderSummary = () => {
   };
 
   const createOrder = async () => {
-    try {
-      if(!selectedAddress){
-        return toast.error("please select an address")
-      }
-      let cartItemsArray = Object.keys(cartItems).map((key) => ({
-        productId: key,
-        quantity: cartItems[key],
-      }));
-      cartItemsArray = cartItemsArray.filter((item) => item.quantity > 0);
-      if(cartItemsArray.length === 0){
-        return toast.error("please add items to cart")
-      }
+    if (!selectedAddress) {
+      toast.error('Please select an address before placing order');
+      return;
+    }
+    if (!session?.user?.email) {
+      toast.error('Please login first to place order');
+      return;
+    }
 
-      const {data} = await axios.post("/api/order/create",{
-        address:selectedAddress,
-        items:cartItemsArray
-      })
-      if(data.success){
-        toast.success(data.message)
-        setCartItems({})
-        router.push("/order-placed")
-      }
-      else{
-        toast.error(data.message)
+    // Build items array from cartItems: { productId, quantity }
+    const items = Object.entries(cartItems || {}).map(([productId, quantity]) => ({
+      productId,
+      quantity
+    })).filter(i => i.quantity > 0);
+
+    if (items.length === 0) {
+      toast.error('Cart is empty');
+      return;
+    }
+
+    try {
+      setCreatingOrder(true);
+      const payload = {
+        address: selectedAddress,
+        items
+      };
+
+      const { data } = await axios.post('/api/order/create', payload);
+
+      if (data && data.success) {
+        // Clear local cart
+        setCartItems({});
+        try {
+          localStorage.setItem('cart', JSON.stringify({}));
+        } catch (e) {
+          // ignore storage errors
+        }
+
+        toast.success(data.message || 'Order placed successfully');
+        // navigate to order placed page or order details
+        if (data.orderId) {
+          router.push(`/order-placed?orderId=${data.orderId}`);
+        } else {
+          router.push('/order-placed');
+        }
+      } else {
+        toast.error(data?.message || 'Failed to place order');
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message || error.message || 'Error creating order');
+      console.error('createOrder error', error);
+      toast.error(error?.response?.data?.message || error.message || 'Error placing order');
+    } finally {
+      setCreatingOrder(false);
     }
   }
 
@@ -187,8 +214,12 @@ const OrderSummary = () => {
         </div>
       </div>
 
-      <button onClick={createOrder} className="w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700">
-        Place Order
+      <button
+        onClick={createOrder}
+        disabled={creatingOrder}
+        className={`w-full py-3 mt-5 text-white ${creatingOrder ? 'bg-orange-400' : 'bg-orange-600 hover:bg-orange-700'}`}
+      >
+        {creatingOrder ? 'Placing Order...' : 'Place Order'}
       </button>
     </div>
   );

@@ -3,7 +3,7 @@ import Providers from "@/components/Providers";
 import { Toaster } from "react-hot-toast";
 
 export const metadata = {
-  title: "QuickCart - GreatStack",
+  title: "QuickCart ",
   description: "E-Commerce with Next.js ",
 };
 
