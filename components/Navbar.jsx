@@ -27,7 +27,7 @@ const Navbar = () => {
           Contact
         </Link>
 
-        {isSeller && <button onClick={() => router.push('/seller')} className="text-xs border px-4 py-1.5 rounded-full">Seller Dashboard</button>}
+        
 
       </div>
 
@@ -45,7 +45,7 @@ const Navbar = () => {
       </ul>
 
       <div className="flex items-center md:hidden gap-3">
-        {isSeller && <button onClick={() => router.push('/seller')} className="text-xs border px-4 py-1.5 rounded-full">Seller Dashboard</button>}
+       
         <div className="relative cursor-pointer" onClick={() => router.push('/cart')}>
           <Image className="w-4 h-4" src={assets.cart_icon} alt="cart icon" />
           {getCartCount() > 0 && (
