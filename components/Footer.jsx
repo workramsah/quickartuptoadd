@@ -24,6 +24,9 @@ const Footer = () => {
               <li>
                 <a className="hover:underline transition" href={"https://www.tiktok.com/@buyxito.com?_r=1&_t=ZS-93S3Ckz2kuv"}>TikTok</a>
               </li>
+              <li>
+                <a className="hover:underline transition" href={"https://www.youtube.com/@buyxito"}>Youtubek</a>
+              </li>
               
             </ul>
           </div>

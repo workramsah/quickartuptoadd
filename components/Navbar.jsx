@@ -1,6 +1,6 @@
 "use client"
 import React from "react";
-import { assets} from "@/assets/assets";
+import { assets } from "@/assets/assets";
 import Link from "next/link"
 import { useAppContext } from "@/context/AppContext";
 import Image from "next/image";
@@ -27,7 +27,18 @@ const Navbar = () => {
           Contact
         </Link>
 
-        
+        <select
+          className="outline-none " >
+          <option value="Category">Category</option>
+          <option value="Headphone">Clothes</option>
+          <option value="Watch">Jewellery</option>
+          <option value="Smartphone">Shoe</option>
+          <option value="Laptop">Watch</option>
+          <option value="Camera">Earbuds</option>
+          <option value="Accessories">Accessories</option>
+        </select>
+
+
 
       </div>
 
@@ -45,7 +56,7 @@ const Navbar = () => {
       </ul>
 
       <div className="flex items-center md:hidden gap-3">
-       
+
         <div className="relative cursor-pointer" onClick={() => router.push('/cart')}>
           <Image className="w-4 h-4" src={assets.cart_icon} alt="cart icon" />
           {getCartCount() > 0 && (
