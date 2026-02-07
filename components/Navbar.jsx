@@ -1,5 +1,5 @@
 "use client"
-import React from "react";
+import React, { useState } from "react";
 import { assets } from "@/assets/assets";
 import Link from "next/link"
 import { useAppContext } from "@/context/AppContext";
@@ -9,6 +9,7 @@ import AuthButton from "@/components/AuthButton";
 const Navbar = () => {
 
   const { isSeller, router, getCartCount } = useAppContext();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
     <nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-300 text-gray-700">
@@ -27,16 +28,24 @@ const Navbar = () => {
           Contact
         </Link>
 
-        <select
-          className="outline-none " >
-          <option value="Category">Category</option>
-          <option value="Headphone">Clothes</option>
-          <option value="Watch">Jewellery</option>
-          <option value="Smartphone">Shoe</option>
-          <option value="Laptop">Watch</option>
-          <option value="Camera">Earbuds</option>
-          <option value="Accessories">Accessories</option>
-        </select>
+        <div className="relative">
+          <div
+            className="cursor-pointer hover:text-gray-900 transition"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          >
+            Category
+          </div>
+          {isDropdownOpen && (
+            <div className="absolute top-full left-0 bg-white shadow-md rounded-md py-1 z-10">
+              <Link href="/category/clothes" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>Clothes</Link>
+              <Link href="/category/watch" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>Watch</Link>
+              <Link href="/category/jewellery" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>Jewellery</Link>
+              <Link href="/category/shoe" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>Shoe</Link>
+              <Link href="/category/earbuds" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>Earbuds</Link>
+              <Link href="/category/accessories" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>Accessories</Link>
+            </div>
+          )}
+        </div>
 
 
 
